@@ -69,7 +69,7 @@ const Home: React.FC = () => {
   const handleAIMoves = (board: GameBoard, lastResult: number) => {
     if (!ai) return;
 
-    let updatedBoard = board.clone();
+    const updatedBoard = board.clone();
     let aiAction = ai.getAction(lastResult);
 
     while (aiAction && !gameOver) {
