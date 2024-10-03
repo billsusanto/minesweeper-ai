@@ -19,7 +19,7 @@ export const Tile: React.FC<TileProps> = ({ x, y, value, onClick }) => {
     displayValue = '';
   } else if (value === TileState.FLAGGED) {
     displayValue = '🚩';
-  } else if (value === -1) {
+  } else if (value === TileState.MINE) {
     displayValue = '💣';
   } else if (value >= 0) {
     displayValue = value.toString();
@@ -27,7 +27,9 @@ export const Tile: React.FC<TileProps> = ({ x, y, value, onClick }) => {
 
   return (
     <button
-      className={`${styles.tile} ${value >= 0 ? styles[`number-${value}`] : ''}`}
+      className={`${styles.tile} 
+        ${value >= 0 ? styles[`number-${value}`] : ''}
+        ${value === TileState.MINE ? styles.mine : ''}`}
       onClick={handleClick}
       disabled={value !== TileState.HIDDEN}
     >

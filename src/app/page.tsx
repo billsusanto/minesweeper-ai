@@ -5,6 +5,7 @@ import { Board } from "./components/Board";
 import { MyAI } from "./lib/MyAI";
 import { GameBoard } from "./lib/GameBoard";
 import { ActionType } from "./lib/Action";
+import { TileState } from "./lib/GameBoard";
 
 const Home: React.FC = () => {
   // State variables for user inputs
@@ -20,13 +21,7 @@ const Home: React.FC = () => {
 
   // Function to start the game
   const startGame = () => {
-    const newGameBoard = new GameBoard(
-      width,
-      height,
-      0,
-      0,
-      mineCount
-    );
+    const newGameBoard = new GameBoard(width, height, 0, 0, mineCount);
     const newAI = new MyAI(width, height, mineCount, 0, 0);
     setGameBoard(newGameBoard);
     setAi(newAI);
@@ -51,9 +46,12 @@ const Home: React.FC = () => {
     const updatedBoard = gameBoard.clone();
     const result = updatedBoard.uncover(x, y);
 
-    if (result === -1) {
+    if (result === TileState.MINE) {
+      // Game Over: Reveal all mines
+      updatedBoard.revealAllMines();
       setGameOver(true);
       setGameBoard(updatedBoard);
+      return;
     } else {
       setGameBoard(updatedBoard);
 
@@ -80,15 +78,14 @@ const Home: React.FC = () => {
         aiAction.getX() !== undefined &&
         aiAction.getY() !== undefined
       ) {
-        const result = updatedBoard.uncover(
-          aiAction.getX(),
-          aiAction.getY()
-        );
+        const result = updatedBoard.uncover(aiAction.getX(), aiAction.getY());
 
-        if (result === -1) {
+        if (result === TileState.MINE) {
+          // Game Over: Reveal all mines
+          updatedBoard.revealAllMines();
           setGameOver(true);
           setGameBoard(updatedBoard);
-          break;
+          return;
         }
 
         setGameBoard(updatedBoard);
@@ -99,6 +96,7 @@ const Home: React.FC = () => {
           setGameWon(true);
           return;
         }
+        
       } else if (
         aiAction.getMove() === ActionType.FLAG &&
         aiAction.getX() !== undefined &&
@@ -106,9 +104,9 @@ const Home: React.FC = () => {
       ) {
         updatedBoard.placeFlag(aiAction.getX(), aiAction.getY());
         setGameBoard(updatedBoard);
-        aiAction = ai.getAction(-1); // Continue with the AI action
+        aiAction = ai.getAction(-1);
       } else if (aiAction.getMove() === ActionType.LEAVE) {
-        setGameOver(true);
+        setGameWon(true);
         return;
       } else {
         break;
@@ -117,53 +115,63 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1>Minesweeper AI</h1>
+    <div className="flex flex-col items-center justify-start min-h-screen pt-8">
+      <h1 className="text-3xl font-bold p-10">Minesweeper AI</h1>
 
-      {/* Input fields for board size and mine count */}
-      <div className="flex space-x-2">
-        <input
-          type="number"
-          value={width}
-          onChange={(e) => setWidth(Number(e.target.value))}
-          placeholder="Width"
-          min={5}
-          max={30}
-          className="border p-1"
-        />
-        <input
-          type="number"
-          value={height}
-          onChange={(e) => setHeight(Number(e.target.value))}
-          placeholder="Height"
-          min={5}
-          max={30}
-          className="border p-1"
-        />
-        <input
-          type="number"
-          value={mineCount}
-          onChange={(e) => {
-            const mines = Number(e.target.value);
-            if (mines >= 1 && mines < width * height) {
-              setMineCount(mines);
-            }
-          }}
-          placeholder="Mines"
-          min={1}
-          max={width * height - 1}
-          className="border p-1"
-        />
-      </div>
-
-      {/* Start and Reset buttons */}
-      <div className="flex space-x-2 mt-2">
-        <button onClick={startGame} className="bg-blue-500 text-white p-2">
-          Start
-        </button>
-        <button onClick={resetGame} className="bg-red-500 text-white p-2">
-          Reset
-        </button>
+      {/* Container for inputs and buttons */}
+      <div className="w-80">
+        {" "}
+        {/* Set a fixed width for the container */}
+        {/* Input fields for board size and mine count */}
+        <div className="flex space-x-2 mb-2">
+          <input
+            type="number"
+            value={width}
+            onChange={(e) => setWidth(Number(e.target.value))}
+            placeholder="Width"
+            min={5}
+            max={30}
+            className="border p-1 w-1/3 text-black"
+          />
+          <input
+            type="number"
+            value={height}
+            onChange={(e) => setHeight(Number(e.target.value))}
+            placeholder="Height"
+            min={5}
+            max={30}
+            className="border p-1 w-1/3 text-black"
+          />
+          <input
+            type="number"
+            value={mineCount}
+            onChange={(e) => {
+              const mines = Number(e.target.value);
+              if (mines >= 1 && mines < width * height) {
+                setMineCount(mines);
+              }
+            }}
+            placeholder="Mines"
+            min={1}
+            max={width * height - 1}
+            className="border p-1 w-1/3 text-black"
+          />
+        </div>
+        {/* Start and Reset buttons */}
+        <div className="flex space-x-2 pb-16">
+          <button
+            onClick={startGame}
+            className="bg-blue-500 text-white p-2 w-1/2"
+          >
+            Start
+          </button>
+          <button
+            onClick={resetGame}
+            className="bg-red-500 text-white p-2 w-1/2"
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       {/* Render the game board only if the game has started */}

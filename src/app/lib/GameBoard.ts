@@ -1,6 +1,7 @@
 export enum TileState {
   HIDDEN = -1,
   FLAGGED = -2,
+  MINE = -3,
 }
 
 export class GameBoard {
@@ -86,8 +87,12 @@ export class GameBoard {
       const y = Math.floor(Math.random() * this.height);
 
       // Avoid placing a mine on the first click position
-      if ((x !== startX || y !== startY) && !this.mineLocations.has(`${x},${y}`)) {
+      if (
+        (x !== startX || y !== startY) &&
+        !this.mineLocations.has(`${x},${y}`)
+      ) {
         this.mineLocations.add(`${x},${y}`);
+        this.grid[x][y] = TileState.MINE; // Set the tile as a mine
       }
     }
     this.initialized = true;
@@ -103,11 +108,11 @@ export class GameBoard {
     const tile = this.grid[x][y];
 
     if (tile === TileState.FLAGGED) return -1;
-    if (tile >= 0) return tile; 
+    if (tile >= 0) return tile;
 
     if (this.mineLocations.has(`${x},${y}`)) {
-      this.grid[x][y] = -1;
-      return -1;
+      this.grid[x][y] = TileState.MINE;
+      return TileState.MINE;
     }
 
     let mineCount = 0;
@@ -116,7 +121,10 @@ export class GameBoard {
         if (dx === 0 && dy === 0) continue;
         const nx = x + dx;
         const ny = y + dy;
-        if (this.isValidPosition(nx, ny) && this.mineLocations.has(`${nx},${ny}`)) {
+        if (
+          this.isValidPosition(nx, ny) &&
+          this.mineLocations.has(`${nx},${ny}`)
+        ) {
           mineCount++;
         }
       }
@@ -157,14 +165,33 @@ export class GameBoard {
   }
 
   isGameWon(): boolean {
-    let uncoveredTiles = 0;
-
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        if (this.grid[x][y] >= 0) uncoveredTiles++;
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        const tile = this.grid[x][y];
+        // If there are still hidden tiles, game is not won
+        if (tile === TileState.HIDDEN) {
+          return false;
+        }
+        // If there's an unflagged mine, game is not won
+        if (this.isMine(x, y) && tile !== TileState.FLAGGED) {
+          return false;
+        }
       }
     }
+    return true;
+  }
 
-    return uncoveredTiles === this.width * this.height - this.mines;
+  isMine(x: number, y: number): boolean {
+    return this.grid[x][y] === TileState.MINE;
+  }
+
+  revealAllMines() {
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        if (this.grid[x][y] === TileState.HIDDEN && this.isMine(x, y)) {
+          this.grid[x][y] = TileState.MINE;
+        }
+      }
+    }
   }
 }

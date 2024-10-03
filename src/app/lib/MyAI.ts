@@ -40,7 +40,7 @@ export class MyAI {
         this.gameBoard.updateGrid(x, y, number);
       }
     }
-    console.log("Movequeue", this.moveQueue[0]);
+
     if (this.moveQueue.length === 0) {
       this.processTurn();
       // Before leaving, perform one last check to ensure all hidden tiles have been processed
@@ -69,7 +69,6 @@ export class MyAI {
       }
 
       if (!this.processedPositions.has("0,0")) {
-        console.log("Adding (0,0) to moveQueue");
         this.moveQueue.push(new Action(ActionType.UNCOVER, 0, 0));
         this.processedPositions.add("0,0");
         return;
